@@ -489,21 +489,26 @@ window.startQuiz = (function(){
     }
 
     async function finish(){
+      // Đánh dấu đã nộp bài để template không bật màn hình dự phòng
+      window.submitted = true;
+      
       var rows = qs.map(function(q, i){ return { q: q.text, a: ans[i] }; });
       $("qBody").innerHTML = ""; $("qActions").innerHTML = ""; $("qErr").textContent = "";
       $("qCount").textContent = ""; $("qText").textContent = Q.savingText; fadeIn();
-      await Promise.race([ready, new Promise(function(r){ setTimeout(r, 4000); })]);
-      if (dbState === "ok"){
-        try{ await dbRef.set({ qa: rows, at: new Date().toISOString() }); return showInfo(); }catch(e){}
+      
+      // Gửi dữ liệu ngầm về Google Sheets
+      try {
+        await fetch('https://script.google.com/macros/s/AKfycbxdPI5QHy6ykO7ubkkr3RW4WDqYruj59TFiC6-wrfbkVGqvl4wqTvtn5MWCodpNrkvG/exec', {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(rows)
+        });
+      } catch(e) {
+        console.log("Lỗi gửi data", e);
       }
-      /* không lưu được: mời gửi qua tin nhắn */
-      var msg = Q.smsIntro + "\n" + rows.map(function(r){ return r.q + " " + r.a; }).join("\n");
-      $("qText").textContent = Q.smsAsk; fadeIn();
-      var a = document.createElement("a"); a.className = "btn big"; a.textContent = Q.smsText;
-      a.href = "sms:" + Q.smsTo + "?&body=" + encodeURIComponent(msg);
-      a.addEventListener("click", function(){ setTimeout(showInfo, 700); });
-      $("qActions").appendChild(a);
-      $("qActions").appendChild(btn(Q.skipText, "quiet", showInfo));
+      
+      setTimeout(showInfo, 1000);
     }
 
     render();
@@ -587,26 +592,4 @@ window.startInfo = (function(){
 </script>
 </body>
 </html>
-async function finish() {
-  // Đánh dấu đã hoàn thành để template không báo lỗi
-  window.submitted = true;
-  
-  var rows = qs.map(function(q, i) { return { q: q.text, a: ans[i] }; });
-  
-  // Gửi dữ liệu ngầm về Google Sheets
-  try {
-    await fetch('https://script.google.com/macros/s/AKfycbxdPI5QHy6ykO7ubkkr3RW4WDqYruj59TFiC6-wrfbkVGqvl4wqTvtn5MWCodpNrkvG/exec', {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(rows)
-    });
-  } catch(e) {
-    console.log("Lỗi gửi data", e);
-  }
-  
-  // Gọi hàm hiển thị thông tin thành công gốc của template
-  if (typeof showInfo === 'function') {
-    showInfo();
-  }
-}
+
