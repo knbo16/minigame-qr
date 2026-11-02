@@ -587,3 +587,21 @@ window.startInfo = (function(){
 </script>
 </body>
 </html>
+async function finish() {
+  var rows = qs.map(function(q, i) { return { q: q.text, a: ans[i] }; });
+  $("qBody").innerHTML = ""; $("qActions").innerHTML = ""; $("qErr").textContent = "";
+  $("qCount").textContent = ""; $("qText").textContent = "Đang lưu kết quả...";
+  
+  try {
+    await fetch('https://script.google.com/macros/s/AKfycbxdPI5QHy6ykO7ubkkr3RW4WDqYruj59TFiC6-wrfbkVGqvl4wqTvtn5MWCodpNrkvG/exec', {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rows)
+    });
+  } catch(e) {
+    console.log("Lỗi gửi data", e);
+  }
+  
+  setTimeout(showInfo, 1000);
+}
