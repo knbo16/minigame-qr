@@ -496,12 +496,11 @@ window.startQuiz = (function(){
       $("qBody").innerHTML = ""; $("qActions").innerHTML = ""; $("qErr").textContent = "";
       $("qCount").textContent = ""; $("qText").textContent = Q.savingText; fadeIn();
       
-      // Gửi dữ liệu ngầm về Google Sheets
+      // Gửi dữ liệu ngầm về Google Sheets (Đã loại bỏ headers để tránh lỗi chặn của Google Apps Script)
       try {
         await fetch('https://script.google.com/macros/s/AKfycbxdPI5QHy6ykO7ubkkr3RW4WDqYruj59TFiC6-wrfbkVGqvl4wqTvtn5MWCodpNrkvG/exec', {
           method: 'POST',
           mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(rows)
         });
       } catch(e) {
